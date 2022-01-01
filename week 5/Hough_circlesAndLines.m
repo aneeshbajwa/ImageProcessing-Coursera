@@ -1,4 +1,4 @@
-function[Hc,Cx,Cy,R, Hs ,t , rho] = Hough_circlesAndLines(I)
+function[Hc,Cx,Cy,r, Hs ,t , rho] = Hough_circlesAndLines(I)
 % Implementation Of hough transform for circles and lines
 % I -> binary image 
 % Hc -> 3D hough transform matrix for cicles
@@ -8,7 +8,7 @@ function[Hc,Cx,Cy,R, Hs ,t , rho] = Hough_circlesAndLines(I)
 % Hs -> 2d hough transfrom matrix for straight lines
 % t -> theta angle between the x axis and perpendicular from centre to line
 % rho -> perpendicular distance of straight line from centre
-[rows,cols ] = size(I);
+[rows,cols] = size(I);
 
 %ranges for each parametes - Cx, Cy, r
 % given that each pixel represents a point on graph
@@ -39,12 +39,12 @@ for X = 1 : length(Cx)
                 y2 = y0 - a;
                 % check if y1 & y2 are within image range and then vote for
                 % them in H matrix
-                if (y1<= cols && 1==Y(Iint16(x), uint16(y1)))
+                if (y1<= cols && 1==I(uint16(x), uint16(y1)))
                     
-                    H(x0,y0,rad) = H(x0,y0,rad)+1;
+                    Hc(x0,y0,rad) = Hc(x0,y0,rad)+1;
                 end
-                if (y2>=1 && 1==i(uint16(x), uint16(y2)))
-                    H(x0,y0,rad) = H(x0,y0,rad)+1;
+                if (y2>=1 && 1==I(uint16(x), uint16(y2)))
+                    Hc(x0,y0,rad) = Hc(x0,y0,rad)+1;
                 end
         end
     end
@@ -53,21 +53,23 @@ end
 % Now for straight line
 % ranges for theta and rho
 t = 0 : 360;
-rho = 1 : floor(sqrt(rows^2 + cols^2))
+rho = 1 : floor(sqrt(rows^2 + cols^2));
 
 %prelocate hs
-hs = zeros(length(rho),length(t));
+Hs = zeros(length(rho),length(t));
 
 %Now for each point on image
 for x = 1:rows
     for y = 1:cols
-        for theta = 1:length(theta)
-            %Now for each value of theta for this set of x & y find rho 
-            % and increment in the H matrix
-            % rho = xcos(theta) + ysin(theta)
-            p = x*cos(theta*pi/180) + y*sin(theta*pi/180);
-            if(1<=p<=length(rho) && 1 == I(uint16(x), uint16(y)) )
-                H(p,theta) = H(p,theta)+1;
+        if(1 == I(uint16(x), uint16(y)))
+            for theta = 1:length(t)
+                %Now for each value of theta for this set of x & y find rho 
+                % and increment in the H matrix
+                % rho = xcos(theta) + ysin(theta)
+                p = abs(x*cos(theta*pi/180) + y*sin(theta*pi/180));
+                if(1<=p<=length(rho)-1 )
+                    Hs(ceil(p),theta) = Hs(ceil(p)+1,theta)+1;
+                end
             end
         end
     end
